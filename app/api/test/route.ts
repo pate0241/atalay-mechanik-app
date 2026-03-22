@@ -5,11 +5,8 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  try {
-    const result = await runBot();
-    return NextResponse.json(result);
-  } catch (error) {
-    console.error(error);
-    return NextResponse.json({ error: String(error) }, { status: 500 });
-  }
+  return Response.json({
+    ok: true,
+    message: "API läuft 🚀"
+  });
 }
