@@ -1,6 +1,6 @@
 // app/ihalebot.ts
 import { db } from "@/lib/db";
-import { chromium, Browser, Page } from "playwright";
+import { chromium, Browser, Page } from "playwright-core";
 import nodemailer from "nodemailer";
 
 // ------------------------------
