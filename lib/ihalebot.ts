@@ -1,5 +1,5 @@
 // app/ihalebot.ts
-import { db } from "@/lib/db";
+import { getDb } from "@/lib/db";
 import { chromium, Browser, Page } from "playwright-core";
 import nodemailer from "nodemailer";
 
@@ -416,12 +416,12 @@ const yeniIhaleler: ParsedTender[] = [];
 for (const [index, card] of uniqueCards.entries()) {
   console.log(`Detay çekiliyor (${index + 1}/${uniqueCards.length}) - ID: ${card.id}`);
 
-  const exists = await new Promise<boolean>((resolve, reject) => {
-    db.get("SELECT id FROM ihaleler WHERE metin = ?", [card.text], (err, row) => {
-      if (err) reject(err);
-      else resolve(!!row);
-    });
-  });
+ const db = getDb();
+ for (const [index, card] of uniqueCards.entries()) {
+  // ... dann db verwenden
+}
+const row = db.prepare("SELECT id FROM ihaleler WHERE metin = ?").get(card.text);
+const exists = !!row;
 
   const participants = await getParticipants(page, card.id);
   const materialList = await getMaterialList(page, card.id);
@@ -442,28 +442,22 @@ for (const [index, card] of uniqueCards.entries()) {
   tumIhaleler.push(parsed);
 
   if (!exists) {
-    await new Promise<void>((resolve, reject) => {
-      db.run(
-        `INSERT INTO ihaleler (
-          metin, participants, material_list, announcement_text,
-          tech_doc_url, admin_doc_url, tech_doc_filename, admin_doc_filename
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-        [
-          card.text,
-          JSON.stringify(participants),
-          JSON.stringify(materialList),
-          announcementText,
-          techDoc?.url || "",
-          adminDoc?.url || "",
-          techDoc?.filename || "",
-          adminDoc?.filename || "",
-        ],
-        (err) => {
-          if (err) reject(err);
-          else resolve();
-        }
-      );
-    });
+    const stmt = db.prepare(`
+  INSERT INTO ihaleler (
+    metin, participants, material_list, announcement_text,
+    tech_doc_url, admin_doc_url, tech_doc_filename, admin_doc_filename
+  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+`);
+stmt.run(
+  card.text,
+  JSON.stringify(participants),
+  JSON.stringify(materialList),
+  announcementText,
+  techDoc?.url || "",
+  adminDoc?.url || "",
+  techDoc?.filename || "",
+  adminDoc?.filename || ""
+);
 
     yeniIhaleler.push(parsed);
   }
